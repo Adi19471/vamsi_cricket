@@ -1,0 +1,137 @@
+{% extends 'slots/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Cricket Slot Booking{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="mb-3">
+                <i class="fas fa-th-large"></i> Dashboard
+            </h1>
+            <p class="lead">Welcome, <strong>{{ user.get_full_name|default:user.username }}</strong>! 👋</p>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-filter"></i> Filter Slots
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label for="cricket_type" class="form-label">Cricket Type</label>
+                    <select name="cricket_type" id="cricket_type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="box" {% if selected_cricket_type == 'box' %}selected{% endif %}>Box Cricket</option>
+                        <option value="normal" {% if selected_cricket_type == 'normal' %}selected{% endif %}>Normal Cricket</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-4">
+                    <label for="date" class="form-label">Select Date</label>
+                    <select name="date" id="date" class="form-select">
+                        <option value="">All Dates</option>
+                        {% for available_date in available_dates %}
+                            <option value="{{ available_date|date:'Y-m-d' }}" {% if selected_date == available_date|date:'Y-m-d' %}selected{% endif %}>
+                                {{ available_date|date:'d M Y' }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Slots Section -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-calendar-check"></i> Available Slots
+        </div>
+        <div class="card-body">
+            {% if slots_with_status %}
+                <div class="slots-grid">
+                    {% for item in slots_with_status %}
+                        <div class="slot-card">
+                            <div class="slot-header">
+                                <div class="slot-type">
+                                    {% if item.slot.cricket_type == 'box' %}
+                                        <i class="fas fa-square"></i> Box Cricket
+                                    {% else %}
+                                        <i class="fas fa-circle"></i> Normal Cricket
+                                    {% endif %}
+                                </div>
+                                <div class="slot-status">
+                                    {% if item.slot.is_available and not item.is_booked_by_user %}
+                                        <span class="badge badge-available">
+                                            <i class="fas fa-check-circle"></i> Available
+                                        </span>
+                                    {% elif item.is_booked_by_user %}
+                                        <span class="badge badge-success">
+                                            <i class="fas fa-check"></i> Booked
+                                        </span>
+                                    {% else %}
+                                        <span class="badge badge-booked">
+                                            <i class="fas fa-times-circle"></i> Full
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="slot-details">
+                                <p>
+                                    <strong><i class="fas fa-calendar"></i> Date:</strong><br>
+                                    {{ item.slot.date|date:'d M Y' }}
+                                </p>
+                                <p>
+                                    <strong><i class="fas fa-clock"></i> Time:</strong><br>
+                                    {{ item.slot.get_time_slot_display }}
+                                </p>
+                                <p>
+                                    <strong><i class="fas fa-users"></i> Players:</strong><br>
+                                    {{ item.slot.booked_count }}/{{ item.slot.max_players }}
+                                </p>
+                                <p>
+                                    <strong><i class="fas fa-rupee-sign"></i> Price:</strong><br>
+                                    ₹{{ item.slot.price }}
+                                </p>
+                            </div>
+                            
+                            <div class="slot-footer">
+                                {% if item.is_booked_by_user %}
+                                    <button class="btn btn-success w-100" disabled>
+                                        <i class="fas fa-check"></i> Already Booked
+                                    </button>
+                                {% elif item.slot.is_available %}
+                                    <a href="{% url 'slots:book_slot' item.slot.id %}" class="btn btn-primary w-100">
+                                        <i class="fas fa-book"></i> Book Now
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-danger w-100" disabled>
+                                        <i class="fas fa-times"></i> Slot Full
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No slots available matching your criteria. Try different filters!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

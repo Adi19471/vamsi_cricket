@@ -1,0 +1,109 @@
+{% extends 'slots/base.html' %}
+{% load static %}
+
+{% block title %}Book Slot - Cricket Slot Booking{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-ticket-alt"></i> Confirm Booking
+                </div>
+                <div class="card-body">
+                    <!-- Slot Details -->
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-info-circle"></i> Slot Details
+                        </h5>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p>
+                                    <strong>Cricket Type:</strong><br>
+                                    {{ slot.get_cricket_type_display }}
+                                </p>
+                                <p>
+                                    <strong>Date:</strong><br>
+                                    {{ slot.date|date:'d M Y' }} ({{ slot.date|date:'l' }})
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p>
+                                    <strong>Time Slot:</strong><br>
+                                    {{ slot.get_time_slot_display }}
+                                </p>
+                                <p>
+                                    <strong>Available Spots:</strong><br>
+                                    {{ slot.max_players|add:"-"|add:slot.booked_count }}/{{ slot.max_players }}
+                                </p>
+                            </div>
+                        </div>
+                        <hr>
+                        <p class="mb-0">
+                            <strong>Price:</strong> ₹{{ slot.price }}
+                        </p>
+                    </div>
+
+                    <!-- Booking Form -->
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+
+                        <!-- User Information (Pre-filled) -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <i class="fas fa-user"></i> Your Information
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Name</label>
+                                        <input type="text" class="form-control" value="{{ user.get_full_name|default:user.username }}" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" value="{{ user.email }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Booking Confirmation -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="confirmCheck" required>
+                            <label class="form-check-label" for="confirmCheck">
+                                I confirm that I want to book this slot and will adhere to all terms and conditions.
+                            </label>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'slots:dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check"></i> Confirm Booking
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Terms -->
+                    <hr class="my-4">
+                    <div class="small text-muted">
+                        <p>
+                            <strong>Important:</strong>
+                        </p>
+                        <ul>
+                            <li>This booking is confirmed for the specified date and time only.</li>
+                            <li>You cannot book the same slot twice.</li>
+                            <li>Once booked, you can view this booking in "My Bookings".</li>
+                            <li>You can cancel your booking anytime from "My Bookings" page.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

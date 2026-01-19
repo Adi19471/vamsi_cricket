@@ -1,0 +1,88 @@
+{% extends 'slots/base.html' %}
+{% load static %}
+
+{% block title %}Welcome - Cricket Slot Booking{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <h1>🏏 Cricket Slot Booking System</h1>
+        <p>Book your perfect cricket slot online</p>
+        <p style="font-size: 1rem; opacity: 0.9;">Whether Box Cricket or Normal Cricket, find your ideal time slot and book instantly</p>
+        
+        <div class="hero-buttons">
+            {% if user.is_authenticated %}
+                <a href="{% url 'slots:dashboard' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-arrow-right"></i> Go to Dashboard
+                </a>
+            {% else %}
+                <a href="{% url 'slots:login' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+                <a href="{% url 'slots:register' %}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="container my-5">
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">View Available Slots</h5>
+                    <p class="card-text">Browse all available cricket slots with different timings and types</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-ticket-alt fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Easy Booking</h5>
+                    <p class="card-text">Quick and secure booking process with instant confirmation</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Box & Normal Cricket</h5>
+                    <p class="card-text">Choose between Box Cricket and Normal Cricket based on your preference</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-lock fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Secure & Safe</h5>
+                    <p class="card-text">Your data is protected with advanced security measures</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="bg-light py-5 my-5">
+    <div class="container text-center">
+        <h2 class="mb-4">Ready to Book Your Slot?</h2>
+        {% if not user.is_authenticated %}
+            <p class="lead mb-4">Create an account or login to start booking your cricket slots today</p>
+            <a href="{% url 'slots:register' %}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-user-plus"></i> Register Now
+            </a>
+            <a href="{% url 'slots:login' %}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
