@@ -4,90 +4,127 @@
 {% block title %}My Bookings - Cricket Slot Booking{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h1 class="mb-3">
-                <i class="fas fa-ticket-alt"></i> My Bookings
-            </h1>
-            <p class="lead">View and manage your cricket slot bookings</p>
-        </div>
-    </div>
 
-    {% if bookings %}
+<div class="container" style="padding-top: 90px;">
+
+  <!-- HERO (Bootstrap only) -->
+  <div class="p-4 p-md-5 rounded-4 text-white shadow-sm mb-4"
+       style="background: linear-gradient(135deg,#0B4F6C,#0A2540);">
+    <div class="d-flex align-items-center gap-3">
+      <div class="d-flex align-items-center justify-content-center rounded-4"
+           style="width:56px;height:56px;background:rgba(255,255,255,.12);">
+        <i class="fas fa-ticket-alt fs-2" style="color:#F97316;"></i>
+      </div>
+      <div>
+        <h1 class="h3 fw-bold mb-1">My Bookings</h1>
+        <p class="mb-0 opacity-75">View and manage your cricket slot bookings</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top actions -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <div class="text-muted small">
+      <i class="fas fa-info-circle me-1"></i>
+      Here you can check status and cancel confirmed bookings.
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'slots:booking_history' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-history me-1"></i> Complete History
+      </a>
+      <a href="{% url 'slots:dashboard' %}" class="btn btn-primary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+      </a>
+    </div>
+  </div>
+
+  {% if bookings %}
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body p-0">
+
         <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th><i class="fas fa-calendar"></i> Date</th>
-                        <th><i class="fas fa-clock"></i> Time</th>
-                        <th><i class="fas fa-users"></i> Type</th>
-                        <th><i class="fas fa-info-circle"></i> Status</th>
-                        <th><i class="fas fa-calendar-plus"></i> Booked On</th>
-                        <th><i class="fas fa-cogs"></i> Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for booking in bookings %}
-                        <tr>
-                            <td>
-                                <strong>{{ booking.slot.date|date:'d M Y' }}</strong>
-                            </td>
-                            <td>{{ booking.slot.get_time_slot_display }}</td>
-                            <td>{{ booking.slot.get_cricket_type_display }}</td>
-                            <td>
-                                {% if booking.status == 'confirmed' %}
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-check-circle"></i> Confirmed
-                                    </span>
-                                {% elif booking.status == 'cancelled' %}
-                                    <span class="badge bg-danger">
-                                        <i class="fas fa-times-circle"></i> Cancelled
-                                    </span>
-                                {% else %}
-                                    <span class="badge bg-warning">
-                                        <i class="fas fa-hourglass-half"></i> Pending
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td>{{ booking.created_at|date:'d M Y' }}</td>
-                            <td>
-                                {% if booking.status == 'confirmed' %}
-                                    <form method="POST" action="{% url 'slots:cancel_booking' booking.id %}" style="display: inline;">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this booking?');">
-                                            <i class="fas fa-times"></i> Cancel
-                                        </button>
-                                    </form>
-                                {% else %}
-                                    <span class="text-muted">N/A</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="card">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                <p class="text-muted mb-3">You haven't booked any slots yet.</p>
-                <a href="{% url 'slots:dashboard' %}" class="btn btn-primary">
-                    <i class="fas fa-arrow-right"></i> Go to Dashboard & Book Now
-                </a>
-            </div>
-        </div>
-    {% endif %}
+          <table class="table table-hover table-striped align-middle mb-0">
+            <thead class="table-light">
+              <tr class="text-nowrap">
+                <th class="ps-4"><i class="fas fa-calendar me-1"></i> Date</th>
+                <th><i class="fas fa-clock me-1"></i> Time</th>
+                <th><i class="fas fa-users me-1"></i> Type</th>
+                <th><i class="fas fa-info-circle me-1"></i> Status</th>
+                <th><i class="fas fa-calendar-plus me-1"></i> Booked On</th>
+                <th class="text-end pe-4"><i class="fas fa-cogs me-1"></i> Action</th>
+              </tr>
+            </thead>
 
-    <!-- Additional Links -->
-    <div class="mt-4">
-        <a href="{% url 'slots:booking_history' %}" class="btn btn-secondary">
-            <i class="fas fa-history"></i> View Complete History
-        </a>
-        <a href="{% url 'slots:dashboard' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
+            <tbody>
+              {% for booking in bookings %}
+                <tr>
+                  <td class="ps-4">
+                    <div class="fw-bold">{{ booking.slot.date|date:'d M Y' }}</div>
+                  </td>
+
+                  <td class="text-nowrap">
+                    {{ booking.slot.get_time_slot_display }}
+                  </td>
+
+                  <td class="text-nowrap">
+                    <span class="fw-semibold">
+                      {{ booking.slot.get_cricket_type_display }}
+                    </span>
+                  </td>
+
+                  <td class="text-nowrap">
+                    {% if booking.status == 'confirmed' %}
+                      <span class="badge bg-success rounded-pill px-3 py-2">
+                        <i class="fas fa-check-circle me-1"></i> Confirmed
+                      </span>
+                    {% elif booking.status == 'cancelled' %}
+                      <span class="badge bg-danger rounded-pill px-3 py-2">
+                        <i class="fas fa-times-circle me-1"></i> Cancelled
+                      </span>
+                    {% else %}
+                      <span class="badge bg-warning text-dark rounded-pill px-3 py-2">
+                        <i class="fas fa-hourglass-half me-1"></i> Pending
+                      </span>
+                    {% endif %}
+                  </td>
+
+                  <td class="text-nowrap">
+                    {{ booking.created_at|date:'d M Y' }}
+                  </td>
+
+                  <td class="text-end pe-4">
+                    {% if booking.status == 'confirmed' %}
+                      <form method="POST"
+                            action="{% url 'slots:cancel_booking' booking.id %}"
+                            class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Are you sure you want to cancel this booking?');">
+                          <i class="fas fa-times me-1"></i> Cancel
+                        </button>
+                      </form>
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+
+      </div>
     </div>
+
+  {% else %}
+
+   
+  {% endif %}
+
 </div>
+
 {% endblock %}

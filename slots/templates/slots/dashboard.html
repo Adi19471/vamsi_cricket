@@ -4,134 +4,237 @@
 {% block title %}Dashboard - Cricket Slot Booking{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Welcome Section -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h1 class="mb-3">
-                <i class="fas fa-th-large"></i> Dashboard
-            </h1>
-            <p class="lead">Welcome, <strong>{{ user.get_full_name|default:user.username }}</strong>! 👋</p>
+
+<!-- HERO (Bootstrap 5 only, no external CSS) -->
+<section class="position-relative text-white overflow-hidden"
+         style="min-height: 65vh;">
+
+  <!-- Background image -->
+  <img src="{% static 'images/DKSA_style_4.png' %}"
+       alt="DKSA"
+       class="position-absolute top-0 start-0 w-100 h-100"
+       style="object-fit: cover; object-position: center;" />
+
+  <!-- Dark overlay -->
+  <div class="position-absolute top-0 start-0 w-100 h-100"
+       style="background: rgba(0,0,0,0.55);"></div>
+
+  <!-- Content -->
+  <div class="container position-relative"
+       style="z-index: 2; padding-top: 80px; padding-bottom: 60px;">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8 text-center">
+
+        <h1 class="fw-bold mb-2"
+            style="font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.1;">
+          <i class="fas fa-cricket me-2"></i> Cricket Slot Booking
+        </h1>
+
+        <p class="lead mb-2">Book your perfect cricket slot online</p>
+
+        <p class="mb-4 opacity-75">
+          Whether Box Cricket or Normal Cricket, find your ideal time slot and book instantly
+        </p>
+
+        <div class="d-flex flex-wrap gap-3 justify-content-center">
+          {% if user.is_authenticated %}
+            <a href="{% url 'slots:my_dashboard' %}" class="btn btn-light btn-lg px-4">
+              <i class="fas fa-user me-2"></i> My Dashboard
+            </a>
+            <a href="{% url 'slots:my_bookings' %}" class="btn btn-outline-light btn-lg px-4">
+              <i class="fas fa-ticket-alt me-2"></i> My Bookings
+            </a>
+          {% else %}
+            <a href="{% url 'slots:login' %}" class="btn btn-light btn-lg px-4">
+              <i class="fas fa-sign-in-alt me-2"></i> Login
+            </a>
+            <a href="{% url 'slots:register' %}" class="btn btn-outline-light btn-lg px-4">
+              <i class="fas fa-user-plus me-2"></i> Register
+            </a>
+          {% endif %}
         </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- AVAILABLE SLOTS -->
+<section class="container py-5">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <h2 class="m-0 fw-bold">
+      <i class="fas fa-calendar-check me-2"></i> Available Slots
+    </h2>
+    <!-- Optional: You can add filters/search later here -->
+  </div>
+
+  {% if slots %}
+    <div class="row g-4">
+      {% for slot in slots %}
+        <div class="col-12 col-md-6 col-lg-4">
+
+          <div class="card h-100 shadow-sm border-0"
+               style="border-radius: 14px;">
+            <div class="card-body d-flex flex-column">
+
+              <!-- Header -->
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="fw-bold">
+                  {% if slot.cricket_type == 'box' %}
+                    <i class="fas fa-square me-2"></i> Box Cricket
+                  {% else %}
+                    <i class="fas fa-circle me-2"></i> Normal Cricket
+                  {% endif %}
+                </div>
+
+                {% if slot.is_available %}
+                  <span class="badge bg-success rounded-pill px-3 py-2">
+                    <i class="fas fa-check-circle me-1"></i> Available
+                  </span>
+                {% else %}
+                  <span class="badge bg-danger rounded-pill px-3 py-2">
+                    <i class="fas fa-times-circle me-1"></i> Full
+                  </span>
+                {% endif %}
+              </div>
+
+              <!-- Details box -->
+              <div class="p-3 rounded-3 border bg-light">
+                <div class="d-flex justify-content-between py-1">
+                  <span class="text-muted"><i class="fas fa-calendar me-2"></i>Date</span>
+                  <span class="fw-semibold">{{ slot.date|date:'d M Y' }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                  <span class="text-muted"><i class="fas fa-clock me-2"></i>Time</span>
+                  <span class="fw-semibold">{{ slot.get_time_slot_display }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                  <span class="text-muted"><i class="fas fa-users me-2"></i>Players</span>
+                  <span class="fw-semibold">{{ slot.booked_count }}/{{ slot.max_players }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                  <span class="text-muted"><i class="fas fa-rupee-sign me-2"></i>Price</span>
+                  <span class="fw-semibold">₹{{ slot.price }}</span>
+                </div>
+              </div>
+
+              <!-- Spacer pushes button to bottom -->
+              <div class="mt-auto pt-3">
+                {% if slot.is_available %}
+                  {% if user.is_authenticated %}
+                    <a href="{% url 'slots:book_slot' slot.id %}"
+                       class="btn btn-primary w-100 btn-lg">
+                      <i class="fas fa-book me-2"></i> Book Now
+                    </a>
+                  {% else %}
+                    <a href="{% url 'slots:login' %}?next={% url 'slots:book_slot' slot.id %}"
+                       class="btn btn-primary w-100 btn-lg">
+                      <i class="fas fa-sign-in-alt me-2"></i> Login to Book
+                    </a>
+                  {% endif %}
+                {% else %}
+                  <button class="btn btn-danger w-100 btn-lg" disabled>
+                    <i class="fas fa-times me-2"></i> Slot Full
+                  </button>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      {% endfor %}
     </div>
 
-    <!-- Filter Section -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-filter"></i> Filter Slots
-        </div>
-        <div class="card-body">
-            <form method="GET" class="row g-3">
-                <div class="col-md-4">
-                    <label for="cricket_type" class="form-label">Cricket Type</label>
-                    <select name="cricket_type" id="cricket_type" class="form-select">
-                        <option value="">All Types</option>
-                        <option value="box" {% if selected_cricket_type == 'box' %}selected{% endif %}>Box Cricket</option>
-                        <option value="normal" {% if selected_cricket_type == 'normal' %}selected{% endif %}>Normal Cricket</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-4">
-                    <label for="date" class="form-label">Select Date</label>
-                    <select name="date" id="date" class="form-select">
-                        <option value="">All Dates</option>
-                        {% for available_date in available_dates %}
-                            <option value="{{ available_date|date:'Y-m-d' }}" {% if selected_date == available_date|date:'Y-m-d' %}selected{% endif %}>
-                                {{ available_date|date:'d M Y' }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="col-md-4">
-                    <label class="form-label">&nbsp;</label>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search"></i> Search
-                    </button>
-                </div>
-            </form>
-        </div>
+  {% else %}
+    <div class="text-center py-5">
+      <div class="display-6 mb-2">😕</div>
+      <p class="text-muted m-0">No slots available currently. Check back later!</p>
     </div>
+  {% endif %}
 
-    <!-- Slots Section -->
-    <div class="card">
-        <div class="card-header">
-            <i class="fas fa-calendar-check"></i> Available Slots
+  <!-- PAGINATION -->
+  {% if slots.has_other_pages %}
+    <nav class="mt-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+        {% if slots.has_previous %}
+          <a class="btn btn-outline-secondary"
+             href="?page={{ slots.previous_page_number }}">
+            <i class="fas fa-arrow-left me-2"></i> Previous
+          </a>
+        {% else %}
+          <button class="btn btn-outline-secondary" disabled>
+            <i class="fas fa-arrow-left me-2"></i> Previous
+          </button>
+        {% endif %}
+
+        <span class="text-muted">
+          Page <span class="fw-semibold">{{ slots.number }}</span>
+          of <span class="fw-semibold">{{ slots.paginator.num_pages }}</span>
+        </span>
+
+        {% if slots.has_next %}
+          <a class="btn btn-outline-secondary"
+             href="?page={{ slots.next_page_number }}">
+            Next <i class="fas fa-arrow-right ms-2"></i>
+          </a>
+        {% else %}
+          <button class="btn btn-outline-secondary" disabled>
+            Next <i class="fas fa-arrow-right ms-2"></i>
+          </button>
+        {% endif %}
+
+      </div>
+    </nav>
+  {% endif %}
+</section>
+
+
+<!-- FEATURES -->
+<section class="container pb-5">
+  <div class="row g-4">
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 border-0 shadow-sm" style="border-radius: 14px;">
+        <div class="card-body text-center">
+          <div class="fs-2 mb-2"><i class="fas fa-calendar-alt"></i></div>
+          <h5 class="fw-bold">View Available Slots</h5>
+          <p class="text-muted mb-0">Browse all available cricket slots with different timings and types</p>
         </div>
-        <div class="card-body">
-            {% if slots_with_status %}
-                <div class="slots-grid">
-                    {% for item in slots_with_status %}
-                        <div class="slot-card">
-                            <div class="slot-header">
-                                <div class="slot-type">
-                                    {% if item.slot.cricket_type == 'box' %}
-                                        <i class="fas fa-square"></i> Box Cricket
-                                    {% else %}
-                                        <i class="fas fa-circle"></i> Normal Cricket
-                                    {% endif %}
-                                </div>
-                                <div class="slot-status">
-                                    {% if item.slot.is_available and not item.is_booked_by_user %}
-                                        <span class="badge badge-available">
-                                            <i class="fas fa-check-circle"></i> Available
-                                        </span>
-                                    {% elif item.is_booked_by_user %}
-                                        <span class="badge badge-success">
-                                            <i class="fas fa-check"></i> Booked
-                                        </span>
-                                    {% else %}
-                                        <span class="badge badge-booked">
-                                            <i class="fas fa-times-circle"></i> Full
-                                        </span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <div class="slot-details">
-                                <p>
-                                    <strong><i class="fas fa-calendar"></i> Date:</strong><br>
-                                    {{ item.slot.date|date:'d M Y' }}
-                                </p>
-                                <p>
-                                    <strong><i class="fas fa-clock"></i> Time:</strong><br>
-                                    {{ item.slot.get_time_slot_display }}
-                                </p>
-                                <p>
-                                    <strong><i class="fas fa-users"></i> Players:</strong><br>
-                                    {{ item.slot.booked_count }}/{{ item.slot.max_players }}
-                                </p>
-                                <p>
-                                    <strong><i class="fas fa-rupee-sign"></i> Price:</strong><br>
-                                    ₹{{ item.slot.price }}
-                                </p>
-                            </div>
-                            
-                            <div class="slot-footer">
-                                {% if item.is_booked_by_user %}
-                                    <button class="btn btn-success w-100" disabled>
-                                        <i class="fas fa-check"></i> Already Booked
-                                    </button>
-                                {% elif item.slot.is_available %}
-                                    <a href="{% url 'slots:book_slot' item.slot.id %}" class="btn btn-primary w-100">
-                                        <i class="fas fa-book"></i> Book Now
-                                    </a>
-                                {% else %}
-                                    <button class="btn btn-danger w-100" disabled>
-                                        <i class="fas fa-times"></i> Slot Full
-                                    </button>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">No slots available matching your criteria. Try different filters!</p>
-                </div>
-            {% endif %}
-        </div>
+      </div>
     </div>
-</div>
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 border-0 shadow-sm" style="border-radius: 14px;">
+        <div class="card-body text-center">
+          <div class="fs-2 mb-2"><i class="fas fa-ticket-alt"></i></div>
+          <h5 class="fw-bold">Easy Booking</h5>
+          <p class="text-muted mb-0">Quick and secure booking process with instant confirmation</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 border-0 shadow-sm" style="border-radius: 14px;">
+        <div class="card-body text-center">
+          <div class="fs-2 mb-2"><i class="fas fa-users"></i></div>
+          <h5 class="fw-bold">Box & Normal Cricket</h5>
+          <p class="text-muted mb-0">Choose between Box Cricket and Normal Cricket based on your preference</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 border-0 shadow-sm" style="border-radius: 14px;">
+        <div class="card-body text-center">
+          <div class="fs-2 mb-2"><i class="fas fa-lock"></i></div>
+          <h5 class="fw-bold">Secure & Safe</h5>
+          <p class="text-muted mb-0">Your data is protected with advanced security measures</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
 {% endblock %}

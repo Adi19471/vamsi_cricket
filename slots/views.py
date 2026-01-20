@@ -1,6 +1,7 @@
 """
 Views for Cricket Slot Booking System
 """
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -8,19 +9,65 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import IntegrityError
 from django.views.decorators.http import require_http_methods
+from django.urls import reverse
 from datetime import datetime, timedelta
+from django.core.paginator import Paginator
 
-from .models import Slot, Booking
+from .models import Slot, Booking, Venue
 from .forms import RegisterForm, BookingForm
+
+
+def venue(request):
+    """
+    Venue information page - shows amenities, policies, pricing, and contact info
+    """
+    # Get the first venue or create default one
+    venue_obj = Venue.objects.first()
+    
+    if not venue_obj:
+        # Create a default venue if none exists
+        venue_obj = Venue.objects.create()
+    
+    context = {
+        'venue': venue_obj,
+    }
+    return render(request, 'slots/venue.html', context)
+
+
+def dashboard(request):
+    """
+    Main Dashboard - Shows available slots (public for everyone) with pagination
+    """
+    today = datetime.now().date()
+    
+    # Get all slots (no limit, we'll paginate)
+    all_slots = Slot.objects.filter(date__gte=today).order_by('date', 'time_slot')
+    
+    # Paginate slots - 6 per page
+    paginator = Paginator(all_slots, 6)
+    page_number = request.GET.get('page')
+    slots_page = paginator.get_page(page_number)
+    
+    # Get venue info
+    venue_obj = Venue.objects.first()
+    
+    # Get all available dates for filter
+    available_dates = Slot.objects.filter(date__gte=today).values_list('date', flat=True).distinct().order_by('date')[:30]
+    
+    context = {
+        'slots': slots_page,
+        'available_dates': available_dates,
+        'venue': venue_obj,
+        'today': today,
+    }
+    return render(request, 'slots/dashboard.html', context)
 
 
 def home(request):
     """
-    Home page - Redirect to dashboard if logged in, else show welcome page
+    Alias for dashboard - redirects to dashboard
     """
-    if request.user.is_authenticated:
-        return redirect('slots:dashboard')
-    return render(request, 'slots/home.html')
+    return redirect('slots:dashboard')
 
 
 @require_http_methods(["GET", "POST"])
@@ -28,6 +75,7 @@ def register(request):
     """
     User Registration View
     """
+    # If already logged in, redirect to dashboard
     if request.user.is_authenticated:
         return redirect('slots:dashboard')
     
@@ -58,10 +106,13 @@ def register(request):
 @require_http_methods(["GET", "POST"])
 def login_view(request):
     """
-    User Login View
+    User Login View - redirects back to dashboard after login
     """
+    # If already logged in, redirect to dashboard
     if request.user.is_authenticated:
         return redirect('slots:dashboard')
+    
+    next_url = request.GET.get('next', 'slots:dashboard')
     
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -73,14 +124,13 @@ def login_view(request):
         if user is not None:
             login(request, user)
             messages.success(request, f'Welcome back, {user.username}! 🎉')
-            return redirect('slots:dashboard')
+            return redirect(next_url)
         else:
             messages.error(request, 'Invalid username or password.')
     
-    return render(request, 'slots/login.html')
+    return render(request, 'slots/login.html', {'next': next_url})
 
 
-@login_required
 @require_http_methods(["GET"])
 def logout_view(request):
     """
@@ -88,59 +138,38 @@ def logout_view(request):
     """
     logout(request)
     messages.success(request, 'You have been logged out successfully.')
-    return redirect('slots:login')
+    return redirect('slots:dashboard')
 
 
 @login_required
 @require_http_methods(["GET"])
-def dashboard(request):
+def my_dashboard(request):
     """
-    Dashboard - Shows available cricket slots (date-wise and time-wise)
+    User's personal dashboard - Shows their bookings
     """
-    # Get filter parameters
-    cricket_type = request.GET.get('cricket_type', '')
-    selected_date = request.GET.get('date', '')
-    
-    # Start with all slots from today onwards
-    today = datetime.now().date()
-    slots = Slot.objects.filter(date__gte=today)
-    
-    # Apply filters if provided
-    if cricket_type:
-        slots = slots.filter(cricket_type=cricket_type)
-    if selected_date:
-        try:
-            selected_date_obj = datetime.strptime(selected_date, '%Y-%m-%d').date()
-            slots = slots.filter(date=selected_date_obj)
-        except ValueError:
-            pass
-    
-    # Order by date and time
-    slots = slots.order_by('date', 'time_slot')
-    
     # Get user's bookings
-    user_bookings = Booking.objects.filter(user=request.user, status='confirmed').values_list('slot_id', flat=True)
+    user_bookings = Booking.objects.filter(user=request.user).select_related('slot').order_by('-created_at')
     
-    # Add booking status to slots
-    slots_with_status = []
-    for slot in slots:
-        slots_with_status.append({
-            'slot': slot,
-            'is_booked_by_user': slot.id in user_bookings,
-            'available_spots': slot.max_players - slot.booked_count,
-        })
+    # Get upcoming confirmed bookings
+    today = datetime.now().date()
+    upcoming_bookings = user_bookings.filter(
+        status='confirmed', 
+        slot__date__gte=today
+    ).order_by('slot__date', 'slot__time_slot')
     
-    # Get available dates for filter
-    available_dates = Slot.objects.filter(date__gte=today).values_list('date', flat=True).distinct().order_by('date')
+    # Get past bookings
+    past_bookings = user_bookings.filter(
+        status='confirmed',
+        slot__date__lt=today
+    ).order_by('-slot__date')[:10]
     
     context = {
-        'slots_with_status': slots_with_status,
-        'available_dates': available_dates,
-        'selected_date': selected_date,
-        'selected_cricket_type': cricket_type,
+        'upcoming_bookings': upcoming_bookings,
+        'past_bookings': past_bookings,
+        'total_bookings': user_bookings.count(),
     }
     
-    return render(request, 'slots/dashboard.html', context)
+    return render(request, 'slots/my_dashboard.html', context)
 
 
 @login_required
@@ -257,3 +286,4 @@ def booking_history(request):
         'total_bookings': bookings.count(),
     }
     return render(request, 'slots/booking_history.html', context)
+

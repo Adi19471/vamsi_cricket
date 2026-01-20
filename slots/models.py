@@ -7,6 +7,90 @@ from django.core.exceptions import ValidationError
 from datetime import datetime
 
 
+class Venue(models.Model):
+    """
+    Represents a Cricket Venue with all amenities and policies
+    """
+    name = models.CharField(
+        max_length=200,
+        default="Box Cricket Turf",
+        help_text="Name of the venue"
+    )
+    
+    # Amenities
+    has_seating = models.BooleanField(default=True, help_text="Seating area available")
+    has_lighting = models.BooleanField(default=True, help_text="Lighting facility available")
+    has_restrooms = models.BooleanField(default=True, help_text="Restrooms available")
+    has_equipments = models.BooleanField(default=True, help_text="Cricket equipments available")
+    has_parking = models.BooleanField(default=True, help_text="Parking facility available")
+    
+    # Number of turfs/boxes
+    total_boxes = models.IntegerField(default=1, help_text="Total number of box-cricket turfs")
+    
+    # Pricing
+    weekday_price = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=600.00,
+        help_text="Price per hour on weekdays (Mon-Fri)"
+    )
+    weekend_price = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=700.00,
+        help_text="Price per hour on weekends (Sat-Sun)"
+    )
+    advance_percentage = models.IntegerField(
+        default=20,
+        help_text="Advance amount percentage required for booking"
+    )
+    
+    # Contact Information
+    email = models.EmailField(
+        default="vamsibilla248@gmail.com",
+        help_text="Contact email"
+    )
+    phone = models.CharField(
+        max_length=20,
+        default="+91 7801019106",
+        help_text="Contact phone number"
+    )
+    
+    # Timing
+    opening_time = models.TimeField(default="10:00:00", help_text="Opening time")
+    closing_time = models.TimeField(default="18:00:00", help_text="Closing time")
+    
+    # Policies
+    no_cancellation = models.BooleanField(
+        default=True,
+        help_text="No cancellation policy"
+    )
+    no_reschedule = models.BooleanField(
+        default=True,
+        help_text="No reschedule policy"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Venue'
+        verbose_name_plural = 'Venues'
+    
+    def __str__(self):
+        return self.name
+    
+    @property
+    def weekday_advance_amount(self):
+        """Get advance amount for weekday booking"""
+        return (self.weekday_price * self.advance_percentage) / 100
+    
+    @property
+    def weekend_advance_amount(self):
+        """Get advance amount for weekend booking"""
+        return (self.weekend_price * self.advance_percentage) / 100
+
+
 class Slot(models.Model):
     """
     Represents a Cricket Slot available for booking
